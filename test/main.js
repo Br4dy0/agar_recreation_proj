@@ -1,37 +1,41 @@
 //Define: menu
 let menu = document.getElementById("getMenu");
-let menuH = menu.offsetHeight;
-let menuW = menu.offsetWidth; 
-//Define: resizeDiv & resizeMsg
-let resizeDiv = document.createElement("div");
-resizeDiv.setAttribute("style", "height:100%; width:100%; border:1px solid white; background-color:#a89f9e; text-align:center");
-let resizeMsg = document.createElement("p");
-resizeMsg.setAttribute("style", "font-family:Arial;");
-resizeMsg.innerHTML = "If possible, please resize your window to at least 400 pixels high and 600 pixels wide!";
-resizeDiv.appendChild(resizeMsg); 
+let menuH = 455;
+let menuW = 610;
+//Define: menu objects
+let menuLeft = document.getElementById("menuLeftPanel");
+let menuMiddle = document.getElementById("menuMidPanel");
+let menuRight = document.getElementById("menuRightPanel");
 //Define: container
 let container = document.getElementById("getContainer"); 
-//gets window dimension values
-const getWin = () =>{
-  var wH = window.innerHeight;
-  var wW = window.innerWidth; 
-  //Check page requirements
-  if (wH < 400 || wW < 600) {
-    dispRes();
-  } else {
-    menu.style.display = "block"; 
-    //Removes resizeDiv
-    if (container.children[1]) {
-      container.removeChild(resizeDiv);
+//resizeMenu
+const resizeMenu  = () =>{
+  let wH = window.innerHeight;
+  let wW = window.innerWidth; 
+  let scaleX = wW / menuW;
+  let scaleY = wH / menuH;
+  let menuT = `translate(${wW / 2 - 305}px, ${wH / 2 - 227.5}px)`;
+  menu.style.transformOrigin = "50% 50%";
+  //container.style.width = wW+"px";
+  //container.style.height = wH+"px";
+  if (wH < 455 && wW < 610) {
+    //Scale X and Y
+    if(scaleX <= scaleY){
+      menu.style.transform = `${menuT} scale(${scaleX})`;
+    } else {
+      menu.style.transform = `${menuT} scale(${scaleY})`;
     }
-  }
-}; 
-//displays resizeDiv
-const dispRes = () =>{
-  menu.style.display = "none"; 
-  //Appends resizeDiv
-  if (container.children.length === 1) {
-    container.appendChild(resizeDiv);
+  } else if(wH < 455 && wW >= 610){
+    //Scale Y
+    menu.style.transform = `${menuT} scale(${scaleY})`;
+  } else if(wH >= 455 && wW < 610){
+    //Scale X
+    menu.style.transform = `${menuT} scale(${scaleX})`;
+  }else{
+    //Set menu back to default
+    menu.style.transform = `${menuT} scale(1)`;
   }
 };
-window.addEventListener("resize", getWin);
+//Event Listeners
+document.addEventListener("DOMContentLoaded", resizeMenu);
+window.addEventListener("resize", resizeMenu);

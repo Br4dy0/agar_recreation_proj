@@ -2,40 +2,43 @@
 
 //Define: menu
 var menu = document.getElementById("getMenu");
-var menuH = menu.offsetHeight;
-var menuW = menu.offsetWidth; //Define: resizeDiv & resizeMsg
+var menuH = 455;
+var menuW = 610; //Define: menu objects
 
-var resizeDiv = document.createElement("div");
-resizeDiv.setAttribute("style", "height:100%; width:100%; border:1px solid white; background-color:#a89f9e; text-align:center");
-var resizeMsg = document.createElement("p");
-resizeMsg.setAttribute("style", "font-family:Arial;");
-resizeMsg.innerHTML = "If possible, please resize your window to at least 400 pixels high and 600 pixels wide!";
-resizeDiv.appendChild(resizeMsg); //Define: container
+var menuLeft = document.getElementById("menuLeftPanel");
+var menuMiddle = document.getElementById("menuMidPanel");
+var menuRight = document.getElementById("menuRightPanel"); //Define: container
 
-var container = document.getElementById("getContainer"); //gets window dimension values
+var container = document.getElementById("getContainer"); //resizeMenu
 
-var getWin = function getWin() {
+var resizeMenu = function resizeMenu() {
   var wH = window.innerHeight;
-  var wW = window.innerWidth; //Check page requirements
+  var wW = window.innerWidth;
+  var scaleX = wW / menuW;
+  var scaleY = wH / menuH;
+  var menuT = "translate(".concat(wW / 2 - 305, "px, ").concat(wH / 2 - 227.5, "px)");
+  menu.style.transformOrigin = "50% 50%"; //container.style.width = wW+"px";
+  //container.style.height = wH+"px";
 
-  if (wH < 400 || wW < 600) {
-    dispRes();
-  } else {
-    menu.style.display = "block"; //Removes resizeDiv
-
-    if (container.children[1]) {
-      container.removeChild(resizeDiv);
+  if (wH < 455 && wW < 610) {
+    //Scale X and Y
+    if (scaleX <= scaleY) {
+      menu.style.transform = "".concat(menuT, " scale(").concat(scaleX, ")");
+    } else {
+      menu.style.transform = "".concat(menuT, " scale(").concat(scaleY, ")");
     }
+  } else if (wH < 455 && wW >= 610) {
+    //Scale Y
+    menu.style.transform = "".concat(menuT, " scale(").concat(scaleY, ")");
+  } else if (wH >= 455 && wW < 610) {
+    //Scale X
+    menu.style.transform = "".concat(menuT, " scale(").concat(scaleX, ")");
+  } else {
+    //Set menu back to default
+    menu.style.transform = "".concat(menuT, " scale(1)");
   }
-}; //displays resizeDiv
+}; //Event Listeners
 
 
-var dispRes = function dispRes() {
-  menu.style.display = "none"; //Appends resizeDiv
-
-  if (container.children.length === 1) {
-    container.appendChild(resizeDiv);
-  }
-};
-
-window.addEventListener("resize", getWin);
+document.addEventListener("DOMContentLoaded", resizeMenu);
+window.addEventListener("resize", resizeMenu);
