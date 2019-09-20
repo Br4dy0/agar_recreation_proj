@@ -93,9 +93,9 @@
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const main = __webpack_require__(/*! ./test/main.js */ "./src/test/main.js");
-main();
+var main = __webpack_require__(/*! ./test/main.js */ "./src/test/main.js");
 
+main();
 
 /***/ }),
 
@@ -106,37 +106,39 @@ main();
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = main = () =>{
+module.exports = main = function main() {
   //Define: menu
-  let menu = document.getElementById("getMenu");
-  let menuH = 455;
-  let menuW = 610;
-  //resizeMenu
-  const resizeMenu  = () =>{
-    let wH = window.innerHeight;
-    let wW = window.innerWidth; 
-    let scaleX = wW / menuW;
-    let scaleY = wH / menuH;
-    let menuT = `translate(${wW / 2 - 305}px, ${wH / 2 - 227.5}px)`;
+  var menu = document.getElementById("getMenu");
+  var menuH = 455;
+  var menuW = 610; //resizeMenu
+
+  var resizeMenu = function resizeMenu() {
+    var wH = window.innerHeight;
+    var wW = window.innerWidth;
+    var scaleX = wW / menuW;
+    var scaleY = wH / menuH;
+    var menuT = "translate(".concat(wW / 2 - 305, "px, ").concat(wH / 2 - 227.5, "px)");
+
     if (wH < 455 && wW < 610) {
       //Scale X and Y
-      if(scaleX <= scaleY){
-        menu.style.transform = `${menuT} scale(${scaleX})`;
+      if (scaleX <= scaleY) {
+        menu.style.transform = "".concat(menuT, " scale(").concat(scaleX, ")");
       } else {
-        menu.style.transform = `${menuT} scale(${scaleY})`;
+        menu.style.transform = "".concat(menuT, " scale(").concat(scaleY, ")");
       }
-    } else if(wH < 455 && wW >= 610){
+    } else if (wH < 455 && wW >= 610) {
       //Scale Y
-      menu.style.transform = `${menuT} scale(${scaleY})`;
-    } else if(wH >= 455 && wW < 610){
+      menu.style.transform = "".concat(menuT, " scale(").concat(scaleY, ")");
+    } else if (wH >= 455 && wW < 610) {
       //Scale X
-      menu.style.transform = `${menuT} scale(${scaleX})`;
-    }else{
+      menu.style.transform = "".concat(menuT, " scale(").concat(scaleX, ")");
+    } else {
       //Set menu back to default
-      menu.style.transform = `${menuT} scale(1)`;
+      menu.style.transform = "".concat(menuT, " scale(1)");
     }
-  };
-  //Event Listeners
+  }; //Event Listeners
+
+
   document.addEventListener("DOMContentLoaded", resizeMenu);
   window.addEventListener("resize", resizeMenu);
 };
