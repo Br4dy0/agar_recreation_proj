@@ -3,7 +3,7 @@ module.exports = websockets = () =>{
   const mlButtons = document.getElementsByClassName("menu-left-list-buttons");
   let topButtons = [];
   let botButtons = [];
-  let colorFade;
+  let colorFade = null;
   //top button down
   const topDownButton = e =>{
     let x = e.target;
@@ -11,6 +11,7 @@ module.exports = websockets = () =>{
       callOtherButtons(e, z);
     });
     callFadeButton(e, x);
+    getWeb();
   }
   //bot button down
   const botDownButton = e =>{
@@ -19,6 +20,7 @@ module.exports = websockets = () =>{
       callOtherButtons(e, z);
     });
     callFadeButton(e, x);
+    getWeb();
   }
   const callFadeButton = (e, x)=>{
     //Stop the fade on each click
@@ -46,6 +48,24 @@ module.exports = websockets = () =>{
           }
         }, 1);
       }
+    }
+  }
+  const getWeb = ()=>{
+    //Websocket Code
+    if(topButtons[0].selected && botButtons[0].selected){
+      const ws = new WebSocket("ws://localhost:8080");
+      ws.onopen = () =>{
+        ws.send("CLIENT-SIDE: OPENED");
+      };
+      ws.onmessage = msg =>{
+        console.log(`RECEIVED MESSAGE: ${msg.data}`);
+      };
+      ws.onclose = close =>{
+        ws.close();
+      };
+      //console.log(ws);      
+    }else{
+      //Do Something Else
     }
   }
   const callOtherButtons = (e, z) =>{

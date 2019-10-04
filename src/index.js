@@ -1,4 +1,4 @@
 const main = require("./test/main");
-const initWeb = require("./test/websockets");
+const initWeb = require("./test/buttons");
 main();
 initWeb();

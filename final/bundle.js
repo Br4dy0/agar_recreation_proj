@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "dbfb78c2f5edba5105e0";
+/******/ 	var hotCurrentHash = "2b9c2ebf2f743e6365d9";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -805,10 +805,119 @@
 
 var main = __webpack_require__(/*! ./test/main */ "./src/test/main.js");
 
-var initWeb = __webpack_require__(/*! ./test/websockets */ "./src/test/websockets.js");
+var initWeb = __webpack_require__(/*! ./test/buttons */ "./src/test/buttons.js");
 
 main();
 initWeb();
+
+/***/ }),
+
+/***/ "./src/test/buttons.js":
+/*!*****************************!*\
+  !*** ./src/test/buttons.js ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = websockets = function websockets() {
+  //Global Variables
+  var mlButtons = document.getElementsByClassName("menu-left-list-buttons");
+  var topButtons = [];
+  var botButtons = [];
+  var colorFade = null; //top button down
+
+  var topDownButton = function topDownButton(e) {
+    var x = e.target;
+    topButtons.forEach(function (z) {
+      callOtherButtons(e, z);
+    });
+    callFadeButton(e, x);
+    getWeb();
+  }; //bot button down
+
+
+  var botDownButton = function botDownButton(e) {
+    var x = e.target;
+    botButtons.forEach(function (z) {
+      callOtherButtons(e, z);
+    });
+    callFadeButton(e, x);
+    getWeb();
+  };
+
+  var callFadeButton = function callFadeButton(e, x) {
+    //Stop the fade on each click
+    clearInterval(colorFade);
+
+    if (e.target === x) {
+      x.style.color = "gray";
+      x.style.fontWeight = "bold";
+      var sRGB = 0;
+      var eRGB = 765;
+      var getInc = eRGB / 100;
+      c = 1; //If the button is not already fading, start the fade 
+
+      if (!x.selected) {
+        x.selected = true;
+        x.disabled = true;
+        colorFade = setInterval(function () {
+          if (c < 101) {
+            var nRGB = sRGB + getInc;
+            nRGB /= 3;
+            x.style.backgroundColor = "rgb(".concat(nRGB, ", ").concat(nRGB, ", ").concat(nRGB, ")");
+            sRGB = parseFloat((nRGB * 3).toFixed(3));
+            c++;
+          } else {
+            clearInterval(colorFade);
+          }
+        }, 1);
+      }
+    }
+  };
+
+  var getWeb = function getWeb() {
+    //Websocket Code
+    if (topButtons[0].selected && botButtons[0].selected) {
+      var ws = new WebSocket("ws://localhost:8080");
+
+      ws.onopen = function () {
+        ws.send("CLIENT-SIDE: OPENED");
+      };
+
+      ws.onmessage = function (msg) {
+        console.log("RECEIVED MESSAGE: ".concat(msg.data));
+      };
+
+      ws.onclose = function (close) {
+        ws.close();
+      }; //console.log(ws);      
+
+    } else {//Do Something Else
+      }
+  };
+
+  var callOtherButtons = function callOtherButtons(e, z) {
+    if (e.target != z) {
+      //Set other buttons to default
+      z.style.color = "white";
+      z.style.backgroundColor = "black";
+      z.style.fontWeight = "normal";
+      z.selected = false;
+      z.disabled = false;
+    }
+  }; //adds event listeners
+
+
+  for (var i = 0; i < mlButtons.length; i++) {
+    if (i < 3) {
+      topButtons.push(mlButtons[i]);
+      mlButtons[i].addEventListener("mousedown", topDownButton);
+    } else {
+      botButtons.push(mlButtons[i]);
+      mlButtons[i].addEventListener("mousedown", botDownButton);
+    }
+  }
+};
 
 /***/ }),
 
@@ -854,92 +963,6 @@ module.exports = main = function main() {
 
   document.addEventListener("DOMContentLoaded", resizeMenu);
   window.addEventListener("resize", resizeMenu);
-};
-
-/***/ }),
-
-/***/ "./src/test/websockets.js":
-/*!********************************!*\
-  !*** ./src/test/websockets.js ***!
-  \********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = websockets = function websockets() {
-  //Global Variables
-  var mlButtons = document.getElementsByClassName("menu-left-list-buttons");
-  var topButtons = [];
-  var botButtons = [];
-  var colorFade; //top button down
-
-  var topDownButton = function topDownButton(e) {
-    var x = e.target;
-    topButtons.forEach(function (z) {
-      callOtherButtons(e, z);
-    });
-    callFadeButton(e, x);
-  }; //bot button down
-
-
-  var botDownButton = function botDownButton(e) {
-    var x = e.target;
-    botButtons.forEach(function (z) {
-      callOtherButtons(e, z);
-    });
-    callFadeButton(e, x);
-  };
-
-  var callFadeButton = function callFadeButton(e, x) {
-    //Stop the fade on each click
-    clearInterval(colorFade);
-
-    if (e.target === x) {
-      x.style.color = "gray";
-      x.style.fontWeight = "bold";
-      var sRGB = 0;
-      var eRGB = 765;
-      var getInc = eRGB / 100;
-      c = 1; //If the button is not already fading, start the fade 
-
-      if (!x.selected) {
-        x.selected = true;
-        x.disabled = true;
-        colorFade = setInterval(function () {
-          if (c < 101) {
-            var nRGB = sRGB + getInc;
-            nRGB /= 3;
-            x.style.backgroundColor = "rgb(".concat(nRGB, ", ").concat(nRGB, ", ").concat(nRGB, ")");
-            sRGB = parseFloat((nRGB * 3).toFixed(3));
-            c++;
-          } else {
-            clearInterval(colorFade);
-          }
-        }, 1);
-      }
-    }
-  };
-
-  var callOtherButtons = function callOtherButtons(e, z) {
-    if (e.target != z) {
-      //Set other buttons to default
-      z.style.color = "white";
-      z.style.backgroundColor = "black";
-      z.style.fontWeight = "normal";
-      z.selected = false;
-      z.disabled = false;
-    }
-  }; //adds event listeners
-
-
-  for (var i = 0; i < mlButtons.length; i++) {
-    if (i < 3) {
-      topButtons.push(mlButtons[i]);
-      mlButtons[i].addEventListener("mousedown", topDownButton);
-    } else {
-      botButtons.push(mlButtons[i]);
-      mlButtons[i].addEventListener("mousedown", botDownButton);
-    }
-  }
 };
 
 /***/ }),

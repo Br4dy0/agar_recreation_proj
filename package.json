@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildweb": "webpack",
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "testweb": "nodemon ./src/server.js"
   },
   "repository": {
     "type": "git",
