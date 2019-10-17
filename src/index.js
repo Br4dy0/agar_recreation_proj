@@ -1,4 +1,5 @@
-const main = require("./test/main");
-const initWeb = require("./test/buttons");
-main();
-initWeb();
+const m = require("./test/main");
+const b = require("./test/buttons");
+document.addEventListener("DOMContentLoaded", m.rE);
+window.addEventListener("resize", m.rE);
+document.addEventListener("DOMContentLoaded", b.buttons);

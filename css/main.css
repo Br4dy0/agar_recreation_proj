@@ -18,6 +18,7 @@ body, html{
 }
 .menu{
   position:absolute;
+  z-index:999;
   height:455px;
   width:610px;
 }
@@ -91,4 +92,11 @@ body, html{
   height:400px;
   width:480px;
   background-color:#6d79be;
+}
+.canvasDiv, .canvas{
+  position:absolute;
+  background-color:black;
+  z-index:0;
+  height:100%;
+  width:100%;
 }

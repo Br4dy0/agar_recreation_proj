@@ -1,0 +1,7 @@
+module.exports = {
+  BORDER_LINE_WIDTH: 5,
+  BORDER_STROKE_COLOR: "white",
+  CANVAS_WIDTH: 15010,
+  CANVAS_HEIGHT: 15010,
+  CANVAS_ZOOM: 1
+}

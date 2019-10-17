@@ -1,15 +1,15 @@
-module.exports = main = () =>{
-  //Define: menu
-  let menu = document.getElementById("getMenu");
-  let menuH = 455;
-  let menuW = 610;
-  //resizeMenu
-  const resizeMenu  = () =>{
-    let wH = window.innerHeight;
-    let wW = window.innerWidth; 
-    let scaleX = wW / menuW;
-    let scaleY = wH / menuH;
-    let menuT = `translate(${wW / 2 - 305}px, ${wH / 2 - 227.5}px)`;
+//Get DOM Elements
+const menu = document.getElementById("menuDiv");
+const canvas = document.getElementById("cvs");
+//Resize Event
+const resizeEvent = () =>{
+  //Resize Menu
+  let wH = window.innerHeight;
+  let wW = window.innerWidth;
+  let scaleX = wW / 610;
+  let scaleY = wH / 455;
+  let menuT = `translate(${wW / 2 - 305}px, ${wH / 2 - 227.5}px)`;
+  if(menu.style.display !== "none"){
     if (wH < 455 && wW < 610) {
       //Scale X and Y
       if(scaleX <= scaleY){
@@ -27,8 +27,13 @@ module.exports = main = () =>{
       //Set menu back to default
       menu.style.transform = `${menuT} scale(1)`;
     }
-  };
-  //Event Listeners
-  document.addEventListener("DOMContentLoaded", resizeMenu);
-  window.addEventListener("resize", resizeMenu);
+  }
+  //Resize Canvas
+  canvas.height = wH;
+  canvas.width = wW;
+}
+module.exports = {
+  menu: menu,
+  canvas: canvas,
+  rE: resizeEvent
 };

@@ -1,83 +1,70 @@
-module.exports = websockets = () =>{
-  //Global Variables
-  const mlButtons = document.getElementsByClassName("menu-left-list-buttons");
+//Global Variables
+const mlButtons = document.getElementsByClassName("menu-left-list-buttons");
+const web = require("./websockets");
+let botfrenzy = {
+  isActive: false
+};
+const buttons = () => {
   let topButtons = [];
   let botButtons = [];
-  let colorFade = null;
   //top button down
   const topDownButton = e =>{
     let x = e.target;
-    topButtons.forEach((z)=>{
-      callOtherButtons(e, z);
+    topButtons.forEach(y=>{
+      (y != x) ? callOtherButtons(y) : callFadeButton(x);
     });
-    callFadeButton(e, x);
-    getWeb();
-  }
+  };
   //bot button down
   const botDownButton = e =>{
     let x = e.target;
-    botButtons.forEach((z)=>{
-      callOtherButtons(e, z);
+    botButtons.forEach(y=>{
+      (y != x) ? callOtherButtons(y) : callFadeButton(x);
     });
-    callFadeButton(e, x);
-    getWeb();
-  }
-  const callFadeButton = (e, x)=>{
+  };
+  const callFadeButton = (x)=>{
     //Stop the fade on each click
-    clearInterval(colorFade);
-    if(e.target === x){
+    if(x){
       x.style.color = "gray";
       x.style.fontWeight = "bold";
+      let time = 0;
       let sRGB = 0;
       let eRGB = 765;
       let getInc = eRGB / 100;
-      c = 1;
       //If the button is not already fading, start the fade 
       if(!x.selected){
         x.selected = true;
         x.disabled = true;
-        colorFade = setInterval(()=>{
-          if(c < 101){
+        getWeb();
+        const buttonFade = ()=>{
+          if(x.selected && time < 100 && !botfrenzy.isActive){
             let nRGB = sRGB + getInc;
             nRGB /= 3;
             x.style.backgroundColor = `rgb(${nRGB}, ${nRGB}, ${nRGB})`;
             sRGB = parseFloat((nRGB * 3).toFixed(3));
-            c++;
+            time++;
           } else {
-            clearInterval(colorFade);
+            clearInterval(buttonFade);
           }
-        }, 1);
+        }
+        setInterval(buttonFade, 1);
       }
     }
-  }
+  };
+  const callOtherButtons = (z) =>{
+    //Set other buttons to default
+    z.style.color = "white";
+    z.style.backgroundColor = "black";
+    z.style.fontWeight = "normal";
+    z.selected = false;
+    z.disabled = false;
+  };
   const getWeb = ()=>{
     //Websocket Code
     if(topButtons[0].selected && botButtons[0].selected){
-      const ws = new WebSocket("ws://localhost:8080");
-      ws.onopen = () =>{
-        ws.send("CLIENT-SIDE: OPENED");
-      };
-      ws.onmessage = msg =>{
-        console.log(`RECEIVED MESSAGE: ${msg.data}`);
-      };
-      ws.onclose = close =>{
-        ws.close();
-      };
-      //console.log(ws);      
-    }else{
-      //Do Something Else
+      botfrenzy.isActive = true;
+      web.w();
     }
-  }
-  const callOtherButtons = (e, z) =>{
-    if(e.target != z){
-      //Set other buttons to default
-      z.style.color = "white";
-      z.style.backgroundColor = "black";
-      z.style.fontWeight = "normal";
-      z.selected = false;
-      z.disabled = false;
-    }
-  }
+  };
   //adds event listeners
   for(let i = 0; i < mlButtons.length; i++){
     if(i < 3){
@@ -88,4 +75,8 @@ module.exports = websockets = () =>{
       mlButtons[i].addEventListener("mousedown", botDownButton);
     }
   }
+};
+module.exports = {
+  buttons: buttons,
+  botfrenzy: botfrenzy
 };

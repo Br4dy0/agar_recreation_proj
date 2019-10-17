@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "2b9c2ebf2f743e6365d9";
+/******/ 	var hotCurrentHash = "772a78e7d81a7285a44c";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -784,7 +784,7 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/final";
+/******/ 	__webpack_require__.p = "/js";
 /******/
 /******/ 	// __webpack_hash__
 /******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
@@ -796,6 +796,23 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "./src/canvas.global.js":
+/*!******************************!*\
+  !*** ./src/canvas.global.js ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = {
+  BORDER_LINE_WIDTH: 5,
+  BORDER_STROKE_COLOR: "white",
+  CANVAS_WIDTH: 15010,
+  CANVAS_HEIGHT: 15010,
+  CANVAS_ZOOM: 1
+};
+
+/***/ }),
+
 /***/ "./src/index.js":
 /*!**********************!*\
   !*** ./src/index.js ***!
@@ -803,12 +820,70 @@
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var main = __webpack_require__(/*! ./test/main */ "./src/test/main.js");
+var m = __webpack_require__(/*! ./test/main */ "./src/test/main.js");
 
-var initWeb = __webpack_require__(/*! ./test/buttons */ "./src/test/buttons.js");
+var b = __webpack_require__(/*! ./test/buttons */ "./src/test/buttons.js");
 
-main();
-initWeb();
+document.addEventListener("DOMContentLoaded", m.rE);
+window.addEventListener("resize", m.rE);
+document.addEventListener("DOMContentLoaded", b.buttons);
+
+/***/ }),
+
+/***/ "./src/test/botfrenzy.js":
+/*!*******************************!*\
+  !*** ./src/test/botfrenzy.js ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(/*! ./main */ "./src/test/main.js");
+
+var gc = __webpack_require__(/*! ../canvas.global */ "./src/canvas.global.js");
+
+var ctx = m.canvas.getContext("2d");
+
+exports.drawCanvas = function (pel) {
+  //Draw Border
+  var drawBorder = function drawBorder(width, height) {
+    ctx.lineWidth = gc.BORDER_LINE_WIDTH * gc.CANVAS_ZOOM;
+    ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
+    ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, width, height);
+  }; //Draw Pellets
+
+
+  var drawPellets = function drawPellets() {
+    for (var i = 0; i < pel.array.length; i++) {
+      ctx.beginPath();
+      ctx.arc(pel.array[i].x, pel.array[i].y, pel.size, 0, 2 * Math.PI);
+      ctx.fillStyle = pel.color;
+      ctx.fill();
+    }
+  }; //Draw Viruses
+
+
+  var drawViruses = function drawViruses() {
+    console.log("Viruses Coming Soon!");
+  };
+
+  drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
+  drawPellets();
+  drawViruses();
+}; //Render Players
+
+
+exports.renderPlayers = function (p) {
+  for (var i = 0; i < p.playerCount; i++) {
+    ctx.beginPath();
+    ctx.arc(p.playerList[i].x, p.playerList[i].y, p.playerList[i].size, 0, 2 * Math.PI);
+    ctx.fillStyle = p.playerList[i].color;
+    ctx.fill();
+  }
+};
+
+exports.onChange = function () {
+  ctx.clearRect(gc.BORDER_LINE_WIDTH / 2, gc.BORDER_LINE_WIDTH / 2, gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
+};
 
 /***/ }),
 
@@ -817,93 +892,82 @@ initWeb();
   !*** ./src/test/buttons.js ***!
   \*****************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = websockets = function websockets() {
-  //Global Variables
-  var mlButtons = document.getElementsByClassName("menu-left-list-buttons");
+//Global Variables
+var mlButtons = document.getElementsByClassName("menu-left-list-buttons");
+
+var web = __webpack_require__(/*! ./websockets */ "./src/test/websockets.js");
+
+var botfrenzy = {
+  isActive: false
+};
+
+var buttons = function buttons() {
   var topButtons = [];
-  var botButtons = [];
-  var colorFade = null; //top button down
+  var botButtons = []; //top button down
 
   var topDownButton = function topDownButton(e) {
     var x = e.target;
-    topButtons.forEach(function (z) {
-      callOtherButtons(e, z);
+    topButtons.forEach(function (y) {
+      y != x ? callOtherButtons(y) : callFadeButton(x);
     });
-    callFadeButton(e, x);
-    getWeb();
   }; //bot button down
 
 
   var botDownButton = function botDownButton(e) {
     var x = e.target;
-    botButtons.forEach(function (z) {
-      callOtherButtons(e, z);
+    botButtons.forEach(function (y) {
+      y != x ? callOtherButtons(y) : callFadeButton(x);
     });
-    callFadeButton(e, x);
-    getWeb();
   };
 
-  var callFadeButton = function callFadeButton(e, x) {
+  var callFadeButton = function callFadeButton(x) {
     //Stop the fade on each click
-    clearInterval(colorFade);
-
-    if (e.target === x) {
+    if (x) {
       x.style.color = "gray";
       x.style.fontWeight = "bold";
+      var time = 0;
       var sRGB = 0;
       var eRGB = 765;
-      var getInc = eRGB / 100;
-      c = 1; //If the button is not already fading, start the fade 
+      var getInc = eRGB / 100; //If the button is not already fading, start the fade 
 
       if (!x.selected) {
         x.selected = true;
         x.disabled = true;
-        colorFade = setInterval(function () {
-          if (c < 101) {
+        getWeb();
+
+        var buttonFade = function buttonFade() {
+          if (x.selected && time < 100 && !botfrenzy.isActive) {
             var nRGB = sRGB + getInc;
             nRGB /= 3;
             x.style.backgroundColor = "rgb(".concat(nRGB, ", ").concat(nRGB, ", ").concat(nRGB, ")");
             sRGB = parseFloat((nRGB * 3).toFixed(3));
-            c++;
+            time++;
           } else {
-            clearInterval(colorFade);
+            clearInterval(buttonFade);
           }
-        }, 1);
+        };
+
+        setInterval(buttonFade, 1);
       }
     }
+  };
+
+  var callOtherButtons = function callOtherButtons(z) {
+    //Set other buttons to default
+    z.style.color = "white";
+    z.style.backgroundColor = "black";
+    z.style.fontWeight = "normal";
+    z.selected = false;
+    z.disabled = false;
   };
 
   var getWeb = function getWeb() {
     //Websocket Code
     if (topButtons[0].selected && botButtons[0].selected) {
-      var ws = new WebSocket("ws://localhost:8080");
-
-      ws.onopen = function () {
-        ws.send("CLIENT-SIDE: OPENED");
-      };
-
-      ws.onmessage = function (msg) {
-        console.log("RECEIVED MESSAGE: ".concat(msg.data));
-      };
-
-      ws.onclose = function (close) {
-        ws.close();
-      }; //console.log(ws);      
-
-    } else {//Do Something Else
-      }
-  };
-
-  var callOtherButtons = function callOtherButtons(e, z) {
-    if (e.target != z) {
-      //Set other buttons to default
-      z.style.color = "white";
-      z.style.backgroundColor = "black";
-      z.style.fontWeight = "normal";
-      z.selected = false;
-      z.disabled = false;
+      botfrenzy.isActive = true;
+      web.w();
     }
   }; //adds event listeners
 
@@ -919,6 +983,11 @@ module.exports = websockets = function websockets() {
   }
 };
 
+module.exports = {
+  buttons: buttons,
+  botfrenzy: botfrenzy
+};
+
 /***/ }),
 
 /***/ "./src/test/main.js":
@@ -928,19 +997,19 @@ module.exports = websockets = function websockets() {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = main = function main() {
-  //Define: menu
-  var menu = document.getElementById("getMenu");
-  var menuH = 455;
-  var menuW = 610; //resizeMenu
+//Get DOM Elements
+var menu = document.getElementById("menuDiv");
+var canvas = document.getElementById("cvs"); //Resize Event
 
-  var resizeMenu = function resizeMenu() {
-    var wH = window.innerHeight;
-    var wW = window.innerWidth;
-    var scaleX = wW / menuW;
-    var scaleY = wH / menuH;
-    var menuT = "translate(".concat(wW / 2 - 305, "px, ").concat(wH / 2 - 227.5, "px)");
+var resizeEvent = function resizeEvent() {
+  //Resize Menu
+  var wH = window.innerHeight;
+  var wW = window.innerWidth;
+  var scaleX = wW / 610;
+  var scaleY = wH / 455;
+  var menuT = "translate(".concat(wW / 2 - 305, "px, ").concat(wH / 2 - 227.5, "px)");
 
+  if (menu.style.display !== "none") {
     if (wH < 455 && wW < 610) {
       //Scale X and Y
       if (scaleX <= scaleY) {
@@ -958,11 +1027,82 @@ module.exports = main = function main() {
       //Set menu back to default
       menu.style.transform = "".concat(menuT, " scale(1)");
     }
-  }; //Event Listeners
+  } //Resize Canvas
 
 
-  document.addEventListener("DOMContentLoaded", resizeMenu);
-  window.addEventListener("resize", resizeMenu);
+  canvas.height = wH;
+  canvas.width = wW;
+};
+
+module.exports = {
+  menu: menu,
+  canvas: canvas,
+  rE: resizeEvent
+};
+
+/***/ }),
+
+/***/ "./src/test/websockets.js":
+/*!********************************!*\
+  !*** ./src/test/websockets.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var websockets = function websockets() {
+  var m = __webpack_require__(/*! ./main */ "./src/test/main.js");
+
+  var b = __webpack_require__(/*! ./buttons */ "./src/test/buttons.js");
+
+  var bf = __webpack_require__(/*! ./botfrenzy */ "./src/test/botfrenzy.js");
+
+  var playerId = "";
+
+  if (b.botfrenzy.isActive) {
+    var ws = new WebSocket("ws://localhost:8080");
+
+    window.onbeforeunload = function () {
+      ws.onclose();
+    }; //console.log(ws);
+
+
+    ws.onopen = function () {
+      ws.send("CLIENT-SIDE: OPENED");
+      m.menu.style.display = "none";
+    };
+
+    ws.onmessage = function (msg) {
+      var data = JSON.parse(msg.data);
+
+      if (data.id === "pellets") {
+        //Draw Canvas
+        bf.drawCanvas(data);
+      } else if (data.playerList[0].id === "player") {
+        var assignPlayerId = function assignPlayerId() {
+          playerId = data.playerList[data.playerList.length - 1].clientId;
+        };
+
+        if (!playerId) {
+          assignPlayerId();
+        } //Spawn Player
+
+
+        bf.renderPlayers(data);
+      } else {
+        //Log the message
+        console.log("SERVER MESSAGE: ".concat(data));
+        b.buttons = false;
+      }
+    };
+
+    ws.onclose = function () {
+      ws.send(playerId);
+    };
+  }
+};
+
+module.exports = {
+  w: websockets
 };
 
 /***/ }),
