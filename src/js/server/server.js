@@ -9,19 +9,19 @@ const wss = new WebSocket.Server({ noServer:true });
 //Load Webpage 
 server.on("request", (req, res)=>{
   if(req.url === "/"){
-    fs.readFile("./src/test/main.html", "utf-8", (err, data) =>{
+    fs.readFile("./src/main.html", "utf-8", (err, data) =>{
       if (err) throw err;
       res.writeHead(200, {'Content-Type': 'text/html'});
       res.write(data);
       res.end();
     });
   }else if (req.url.match("\.css$")){
-    let cssPath = path.join("./css/main.css");
+    let cssPath = path.join("./src/css/main.css");
     let fileStream = fs.createReadStream(cssPath, "utf8");
     res.writeHead(200, {"content-Type": "text/css"});
     fileStream.pipe(res);
   }else if (req.url.match("\.js$")){
-    let jsPath = path.join("./js/bundle.js");
+    let jsPath = path.join("./final/js/bundle.js");
     let fileStream = fs.createReadStream(jsPath, "utf8");
     res.writeHead(200, {"content-Type": "text/javascript"});
     fileStream.pipe(res);

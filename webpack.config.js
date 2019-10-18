@@ -4,11 +4,11 @@ module.exports = {
   mode: "development",
   devtool: "none",
   devServer: {
-    contentBase: path.join(__dirname, 'src/test'),
+    contentBase: path.join(__dirname, 'src/js/client'),
     watchContentBase: true
   },
   entry: {
-    index: ["./src/index.js"]
+    index: ["./src/js/client/index.js"]
   },
   output: {
     filename: "bundle.js",
