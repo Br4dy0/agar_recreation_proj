@@ -15,22 +15,27 @@ const websockets = () =>{
     };
     ws.onmessage = msg =>{
       let data = JSON.parse(msg.data);
+      let pellets = null;
+      let players = null;
       if(data.id === "pellets"){
         //Draw Canvas
-        bf.drawCanvas(data);
+        pellets = data;
+        bf.drawPellets(pellets);
+        bf.updateCanavs(pellets, null);
       } else if (data.playerList[0].id === "player"){
+        players = data;
         const assignPlayerId = ()=>{
-          playerId = data.playerList[data.playerList.length - 1].clientId;
+          playerId = players.playerList[players.playerList.length - 1].clientId;
         };
         if(!playerId){
           assignPlayerId();
         }
         //Spawn Player
-        bf.renderPlayers(data);
+        bf.drawPlayers(players);
+        bf.updateCanavs(null, players);
       } else {
         //Log the message
         console.log(`SERVER MESSAGE: ${data}`);
-        b.buttons = false;
       }
     };
     ws.onclose = () =>{

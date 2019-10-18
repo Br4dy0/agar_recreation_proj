@@ -2,7 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const server = http.createServer();
-const bf = require("./test/server.bf");
+const bf = require("./server.bf");
 //Websocket Stuff
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ noServer:true });
@@ -64,7 +64,6 @@ wss.on("connection", ws => {
         bf.sI.playerId.pop(x);
       }
     });
-    console.log(bf.sI.playerList);
     bf.sI.playerCount--;
     wss.clients.forEach(client=>{
       if(client !== ws){

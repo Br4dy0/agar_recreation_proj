@@ -3,7 +3,7 @@ let pellets = {
   id: "pellets",
   array: [],
   limit: 5000,
-  size: 3,
+  size: 1.772,
   color: "red"
 };
 //Create Player object
@@ -12,7 +12,7 @@ let player = {
   clientId: "",
   x: null,
   y: null,
-  size: 50,
+  size: 17.72,
   color: null,
   cells:{}
 };
@@ -74,7 +74,6 @@ const createPlayer = ()=>{
       }
     }
     serverInfo.playerId.push(player.clientId);
-    console.log(player.clientId);
   };
   createId();
   const data = {

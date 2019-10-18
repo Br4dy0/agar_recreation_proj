@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "772a78e7d81a7285a44c";
+/******/ 	var hotCurrentHash = "d3ad0d2294e5df41a444";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -784,7 +784,7 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/js";
+/******/ 	__webpack_require__.p = "/final";
 /******/
 /******/ 	// __webpack_hash__
 /******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
@@ -808,7 +808,10 @@ module.exports = {
   BORDER_STROKE_COLOR: "white",
   CANVAS_WIDTH: 15010,
   CANVAS_HEIGHT: 15010,
-  CANVAS_ZOOM: 1
+  RENDER_WIDTH_DISTANCE: 1500,
+  RENDER_HEIGHT_DISTANCE: 800,
+  CANVAS_ZOOM: 1,
+  FPS_60: 16.6667
 };
 
 /***/ }),
@@ -837,53 +840,82 @@ document.addEventListener("DOMContentLoaded", b.buttons);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
+var _this = this;
+
 var m = __webpack_require__(/*! ./main */ "./src/test/main.js");
 
 var gc = __webpack_require__(/*! ../canvas.global */ "./src/canvas.global.js");
 
 var ctx = m.canvas.getContext("2d");
+var currPellets = null;
+var currPlayers = null; //Draw Border
 
-exports.drawCanvas = function (pel) {
-  //Draw Border
-  var drawBorder = function drawBorder(width, height) {
-    ctx.lineWidth = gc.BORDER_LINE_WIDTH * gc.CANVAS_ZOOM;
-    ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
-    ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, width, height);
-  }; //Draw Pellets
+var drawBorder = function drawBorder(width, height) {
+  ctx.lineWidth = gc.BORDER_LINE_WIDTH * gc.CANVAS_ZOOM;
+  ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
+  ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, width, height);
+}; //Draw Pellets
 
 
-  var drawPellets = function drawPellets() {
+exports.drawPellets = function (pel) {
+  if (pel) {
     for (var i = 0; i < pel.array.length; i++) {
       ctx.beginPath();
       ctx.arc(pel.array[i].x, pel.array[i].y, pel.size, 0, 2 * Math.PI);
       ctx.fillStyle = pel.color;
       ctx.fill();
     }
-  }; //Draw Viruses
+  }
+}; //Draw Viruses
 
 
-  var drawViruses = function drawViruses() {
-    console.log("Viruses Coming Soon!");
-  };
-
-  drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
-  drawPellets();
-  drawViruses();
-}; //Render Players
+exports.drawViruses = function () {
+  console.log("Viruses Coming Soon!");
+}; //Draw Players
 
 
-exports.renderPlayers = function (p) {
-  for (var i = 0; i < p.playerCount; i++) {
-    ctx.beginPath();
-    ctx.arc(p.playerList[i].x, p.playerList[i].y, p.playerList[i].size, 0, 2 * Math.PI);
-    ctx.fillStyle = p.playerList[i].color;
-    ctx.fill();
+exports.drawPlayers = function (p) {
+  if (p) {
+    for (var i = 0; i < p.playerCount; i++) {
+      ctx.beginPath();
+      ctx.arc(p.playerList[i].x, p.playerList[i].y, p.playerList[i].size, 0, 2 * Math.PI);
+      ctx.fillStyle = p.playerList[i].color;
+      ctx.fill();
+    }
   }
 };
 
-exports.onChange = function () {
-  ctx.clearRect(gc.BORDER_LINE_WIDTH / 2, gc.BORDER_LINE_WIDTH / 2, gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
+exports.updateCanavs = function (pellets, players) {
+  if (pellets) currPellets = pellets;
+  if (players) currPlayers = players;
+
+  var step = function step(timestamp) {
+    var start = null;
+    if (!start) start = timestamp;
+    var progress = timestamp - start;
+
+    if (progress <= gc.FPS_60) {
+      //Reset Map
+      ctx.clearRect(gc.BORDER_LINE_WIDTH / 2, gc.BORDER_LINE_WIDTH / 2, gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT); //Redraw Border
+
+      drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT); //Redraw Pellets
+
+      pellets ? _this.drawPellets(pellets) : _this.drawPellets(currPellets); //Redraw Viruses
+
+      _this.drawViruses(); //Redraw Players
+
+
+      players ? _this.drawPlayers(players) : _this.drawPlayers(currPlayers); //Reset
+
+      console.log("HI");
+      window.requestAnimationFrame(step);
+    }
+  };
+
+  window.requestAnimationFrame(step);
 };
+
+drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
 
 /***/ }),
 
@@ -1073,13 +1105,19 @@ var websockets = function websockets() {
 
     ws.onmessage = function (msg) {
       var data = JSON.parse(msg.data);
+      var pellets = null;
+      var players = null;
 
       if (data.id === "pellets") {
         //Draw Canvas
-        bf.drawCanvas(data);
+        pellets = data;
+        bf.drawPellets(pellets);
+        bf.updateCanavs(pellets, null);
       } else if (data.playerList[0].id === "player") {
+        players = data;
+
         var assignPlayerId = function assignPlayerId() {
-          playerId = data.playerList[data.playerList.length - 1].clientId;
+          playerId = players.playerList[players.playerList.length - 1].clientId;
         };
 
         if (!playerId) {
@@ -1087,11 +1125,11 @@ var websockets = function websockets() {
         } //Spawn Player
 
 
-        bf.renderPlayers(data);
+        bf.drawPlayers(players);
+        bf.updateCanavs(null, players);
       } else {
         //Log the message
         console.log("SERVER MESSAGE: ".concat(data));
-        b.buttons = false;
       }
     };
 
