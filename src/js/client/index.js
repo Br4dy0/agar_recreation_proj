@@ -1,5 +1,5 @@
-const m = require("./test/main");
-const b = require("./test/buttons");
-document.addEventListener("DOMContentLoaded", m.rE);
-window.addEventListener("resize", m.rE);
+const m = require("./main");
+const b = require("./buttons");
+document.addEventListener("DOMContentLoaded", m.resize);
 document.addEventListener("DOMContentLoaded", b.buttons);
+window.addEventListener("resize", m.resize);

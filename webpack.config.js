@@ -15,21 +15,19 @@ module.exports = {
     path: path.resolve(__dirname, "final/js"),
     publicPath: "/final"
   },
+  plugins:[
+    new webpack.HotModuleReplacementPlugin()
+  ],
   module:{
-    rules:[
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loaders:[
-          {
-            loader:"babel-loader",
-            options:{
-              presets: ["@babel/preset-env"]
-            }
-          }
-        ]
-      }
-    ]
-  },
-  plugins:[new webpack.HotModuleReplacementPlugin()]
+    rules:[{
+      test: /\.js$/,
+      exclude: /node_modules/,
+      loaders:[{
+        loader:"babel-loader",
+        options:{
+          presets: ["@babel/preset-env"]
+        }
+      }]
+    }]
+  }
 };

@@ -1,70 +1,154 @@
 const m = require("./main");
-const gc = require("../canvas.global");
+const b = require("./buttons");
+const gc = require("./canvas.global");
 const ctx = m.canvas.getContext("2d");
-let currPellets = null;
-let currPlayers = null;
-//Draw Border
-const drawBorder = (width, height) =>{
-  ctx.lineWidth = gc.BORDER_LINE_WIDTH * gc.CANVAS_ZOOM;
-  ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
-  ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, width, height);
-};
-//Draw Pellets
-exports.drawPellets = (pel) =>{
-  if(pel){
-    for(let i = 0; i < pel.array.length; i++){
-      ctx.beginPath();
-      ctx.arc(pel.array[i].x, 
-        pel.array[i].y, 
-        pel.size, 
-        0, 2*Math.PI);
-      ctx.fillStyle = pel.color;
-      ctx.fill();
-    }
-  }
-};
-//Draw Viruses
-exports.drawViruses = () =>{
-  console.log("Viruses Coming Soon!");
-};
-//Draw Players
-exports.drawPlayers = (p)=>{
-  if(p){
-    for(let i = 0; i < p.playerCount; i++){
-      ctx.beginPath();
-      ctx.arc(p.playerList[i].x, 
-        p.playerList[i].y, 
-        p.playerList[i].size, 
-        0, 2*Math.PI);
-      ctx.fillStyle = p.playerList[i].color;
-      ctx.fill();
-    }
-  }
-};
-exports.updateCanavs = (pellets, players)=>{
-  if(pellets) currPellets = pellets;
-  if(players) currPlayers = players;
-  const step = (timestamp)=>{
-    let start = null;
-    if (!start) start = timestamp;
-    let progress = timestamp - start;
 
-    if (progress <= gc.FPS_60) {
+let clientId = "";
+let message = { type:null, clientId:null, content:null};
+let server = null;
+let mouseCoords = {x:null, y:null};
+
+//Initiate Client-Side
+exports.init = () =>{
+  if(b.botfrenzy.isActive){
+    const ws = new WebSocket("ws://localhost:8080");
+    ws.onopen = () =>{
+      //Send Opened
+      message.type = "open";
+      message.content = "CLIENT-SIDE: OPENED";
+      ws.send(JSON.stringify(message));
+      m.menu.style.display = "none";
+    };
+    ws.onmessage = msg =>{
+      let data;
+      data = msg.data;
+      if(data.substring(0, 15) === "SERVER MESSAGE:"){
+        console.log(data);
+      }else{
+        try{
+          data = JSON.parse(msg.data);
+          if(data.id === "server"){
+            server = data;
+            /* Define clientId */
+            const assignPlayerId = ()=>{
+              clientId = data.ids[data.ids.length - 1];
+              message.clientId = clientId;
+            };
+            if(!clientId){
+              assignPlayerId();
+            }
+            /* Define clientId */
+            updateCanavs(data);
+          }else{
+            //Log the message
+            console.log(`SERVER MESSAGE: ${msg.data}`);
+          }
+        }
+        catch(e){
+          console.log(`An error has occured: ${msg.data}`);
+        }
+      }
+    };
+    ws.onclose = () =>{
+      //Send Closed
+      message.type = "close";
+      message.content = message.clientId;
+      ws.send(JSON.stringify(message));
+    };
+    window.onbeforeunload = ()=>{
+      ws.onclose();
+    };
+    window.onmousemove = (e)=>{
+      mouseCoords.x = e.clientX;
+      mouseCoords.y = e.clientY;
+    };
+    window.onresize = ()=>{
+      updateCanavs(null);
+    }
+    //Draw Border
+    const drawBorder = (width, height) =>{
+      ctx.lineWidth = gc.BORDER_LINE_WIDTH;
+      ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
+      ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, width+ctx.lineWidth*2, height+ctx.lineWidth*2);
+    };
+    //Draw Pellets
+    const drawPellets = (s) =>{
+      for(let i = 0; i < s.pellets[0]._count; i++){
+        ctx.beginPath();
+        ctx.arc(s.pellets[0]._array[i].x, 
+          s.pellets[0]._array[i].y, 
+          s.pellets[0]._radius, 
+          0, 2*Math.PI);
+        ctx.fillStyle = gc.PELLET_COLOR;
+        ctx.fill();
+      }
+    };
+    //Draw Viruses
+    const drawViruses = (s) =>{
+      //console.log("Great!");
+    };
+    //Draw Players
+    const drawPlayers = (s)=>{
+      for(let i = 0; i < s.count; i++){
+        ctx.beginPath();
+        ctx.arc(s.players[i].x, 
+          s.players[i].y, 
+          s.players[i]._radius, 
+          0, 2*Math.PI);
+        ctx.fillStyle = s.players[i]._color;
+        ctx.fill();
+      }
+    };
+    const updateCanavs = ()=>{
       //Reset Map
-      ctx.clearRect(gc.BORDER_LINE_WIDTH / 2, gc.BORDER_LINE_WIDTH / 2, gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
+      ctx.clearRect(
+        ctx.lineWidth/2, 
+        ctx.lineWidth/2, 
+        server._width+(gc.BORDER_LINE_WIDTH*2), 
+        server._height+(gc.BORDER_LINE_WIDTH*2));
       //Redraw Border
-      drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
+      drawBorder(server._width, server._height);
       //Redraw Pellets
-      (pellets) ? this.drawPellets(pellets) : this.drawPellets(currPellets);
+      drawPellets(server);
       //Redraw Viruses
-      this.drawViruses();
+      drawViruses(server);
       //Redraw Players
-      (players) ? this.drawPlayers(players) : this.drawPlayers(currPlayers);
-      //Reset
-      console.log("HI");
+      drawPlayers(server);
+      //Call Request Animation Frame
+      if(!gc.RAF_RUNNING){
+        gc.RAF_RUNNING = true;
+        raf();
+      }
+    }
+    const raf = () =>{
+      /* Ignore */
+      window.requestAnimationFrame = 
+      window.requestAnimationFrame || 
+      window.mozRequestAnimationFrame ||                           
+      window.webkitRequestAnimationFrame ||                                        
+      window.msRequestAnimationFrame;
+      /* Ignore */
+      let start = null;
+      let interval = 0;
+      let frame = 1;
+      const step = (timestamp)=>{
+        //If mouse moved, send new data
+        console.log("0");
+        sendMouse();
+        if(frame === 59){
+          frame = 0;
+        }
+        frame++;
+        window.requestAnimationFrame(step);
+      }
       window.requestAnimationFrame(step);
     }
+    const sendMouse = ()=>{
+      //Send Mouse Moved
+      message.type = "mousemove";
+      message.content = mouseCoords;
+      ws.send(JSON.stringify(message));
+    }
   }
-  window.requestAnimationFrame(step);
 }
-drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
+      

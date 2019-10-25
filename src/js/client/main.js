@@ -2,7 +2,7 @@
 const menu = document.getElementById("menuDiv");
 const canvas = document.getElementById("cvs");
 //Resize Event
-const resizeEvent = () =>{
+const resize = () =>{
   //Resize Menu
   let wH = window.innerHeight;
   let wW = window.innerWidth;
@@ -35,5 +35,5 @@ const resizeEvent = () =>{
 module.exports = {
   menu: menu,
   canvas: canvas,
-  rE: resizeEvent
+  resize: resize
 };

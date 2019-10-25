@@ -42,34 +42,51 @@ server.on("upgrade", (req, socket, head)=>{
 });
 //Websocket Connection
 wss.on("connection", ws => {
+  ws.binaryType = "blob";
   //When the connection is established...
-  let message = "";
-  ws.send(JSON.stringify(bf.pel));
-  bf.cP();
+  if(bf.server.count < bf.server._limit){
+    //Send Client server confirmation message
+    ws.send("SERVER MESSAGE: OPENED");
+    //Create new player
+    bf.newPlayer();
+  }else{
+    //Send Client server confirmation message
+    ws.send("SERVER MESSAGE: SERVER IS FULL!");
+    //Close the socekt
+    ws.close();
+  }
+  //Send Server to every client
   wss.clients.forEach(client=>{
-    client.send(JSON.stringify(bf.sI));
+    client.send(JSON.stringify(bf.server));
   });
   ws.on("error", err =>{
     console.log(`ERROR: ${err}`);
   });
   ws.on("message", msg =>{
-    console.log(`CLIENT MESSAGE: ${msg}`);
-    message = msg;
+    try{
+      let message = JSON.parse(msg);
+      if(message.type === "open"){
+        console.log(`CLIENT MESSAGE: ${message.content}`);
+      }else if(message.type === "mousemove"){
+        bf.playerMovement(message);
+        wss.clients.forEach(client=>{
+          client.send(JSON.stringify(bf.server));
+        });
+      }else if(message.type === "close"){
+        bf.playerLeft(message);
+        wss.clients.forEach(client=>{
+          if(client !== ws){
+            client.send(JSON.stringify(bf.server));
+          }
+        });
+      }
+    }
+    catch(e){
+      //console.log(e);
+    }
   });
   ws.on("close", close =>{
     console.log(`CLOSED: ${close}`);
-    bf.sI.playerList.forEach(x=>{
-      if(x.clientId === message){
-        bf.sI.playerList.pop(x);
-        bf.sI.playerId.pop(x);
-      }
-    });
-    bf.sI.playerCount--;
-    wss.clients.forEach(client=>{
-      if(client !== ws){
-        client.send(JSON.stringify(bf.sI));
-      }
-    });
     ws.close();
   });
 });

@@ -63,7 +63,7 @@
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "d3ad0d2294e5df41a444";
+/******/ 	var hotCurrentHash = "c30ac56512639323d34a";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -796,173 +796,222 @@
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/canvas.global.js":
-/*!******************************!*\
-  !*** ./src/canvas.global.js ***!
-  \******************************/
+/***/ "./src/js/client/botfrenzy.js":
+/*!************************************!*\
+  !*** ./src/js/client/botfrenzy.js ***!
+  \************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-module.exports = {
-  BORDER_LINE_WIDTH: 5,
-  BORDER_STROKE_COLOR: "white",
-  CANVAS_WIDTH: 15010,
-  CANVAS_HEIGHT: 15010,
-  RENDER_WIDTH_DISTANCE: 1500,
-  RENDER_HEIGHT_DISTANCE: 800,
-  CANVAS_ZOOM: 1,
-  FPS_60: 16.6667
+var m = __webpack_require__(/*! ./main */ "./src/js/client/main.js");
+
+var b = __webpack_require__(/*! ./buttons */ "./src/js/client/buttons.js");
+
+var gc = __webpack_require__(/*! ./canvas.global */ "./src/js/client/canvas.global.js");
+
+var ctx = m.canvas.getContext("2d");
+var clientId = "";
+var message = {
+  type: null,
+  clientId: null,
+  content: null
+};
+var server = null;
+var mouseCoords = {
+  x: null,
+  y: null
+}; //Initiate Client-Side
+
+exports.init = function () {
+  if (b.botfrenzy.isActive) {
+    var ws = new WebSocket("ws://localhost:8080");
+
+    ws.onopen = function () {
+      //Send Opened
+      message.type = "open";
+      message.content = "CLIENT-SIDE: OPENED";
+      ws.send(JSON.stringify(message));
+      m.menu.style.display = "none";
+    };
+
+    ws.onmessage = function (msg) {
+      var data;
+      data = msg.data;
+
+      if (data.substring(0, 15) === "SERVER MESSAGE:") {
+        console.log(data);
+      } else {
+        try {
+          data = JSON.parse(msg.data);
+
+          if (data.id === "server") {
+            server = data;
+            /* Define clientId */
+
+            var assignPlayerId = function assignPlayerId() {
+              clientId = data.ids[data.ids.length - 1];
+              message.clientId = clientId;
+            };
+
+            if (!clientId) {
+              assignPlayerId();
+            }
+            /* Define clientId */
+
+
+            updateCanavs(data);
+          } else {
+            //Log the message
+            console.log("SERVER MESSAGE: ".concat(msg.data));
+          }
+        } catch (e) {
+          console.log("An error has occured: ".concat(msg.data));
+        }
+      }
+    };
+
+    ws.onclose = function () {
+      //Send Closed
+      message.type = "close";
+      message.content = message.clientId;
+      ws.send(JSON.stringify(message));
+    };
+
+    window.onbeforeunload = function () {
+      ws.onclose();
+    };
+
+    window.onmousemove = function (e) {
+      mouseCoords.x = e.clientX;
+      mouseCoords.y = e.clientY;
+    };
+
+    window.onresize = function () {
+      updateCanavs(null);
+    }; //Draw Border
+
+
+    var drawBorder = function drawBorder(width, height) {
+      ctx.lineWidth = gc.BORDER_LINE_WIDTH;
+      ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
+      ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, width + ctx.lineWidth * 2, height + ctx.lineWidth * 2);
+    }; //Draw Pellets
+
+
+    var drawPellets = function drawPellets(s) {
+      for (var i = 0; i < s.pellets[0]._count; i++) {
+        ctx.beginPath();
+        ctx.arc(s.pellets[0]._array[i].x, s.pellets[0]._array[i].y, s.pellets[0]._radius, 0, 2 * Math.PI);
+        ctx.fillStyle = gc.PELLET_COLOR;
+        ctx.fill();
+      }
+    }; //Draw Viruses
+
+
+    var drawViruses = function drawViruses(s) {//console.log("Great!");
+    }; //Draw Players
+
+
+    var drawPlayers = function drawPlayers(s) {
+      for (var i = 0; i < s.count; i++) {
+        ctx.beginPath();
+        ctx.arc(s.players[i].x, s.players[i].y, s.players[i]._radius, 0, 2 * Math.PI);
+        ctx.fillStyle = s.players[i]._color;
+        ctx.fill();
+      }
+    };
+
+    var updateCanavs = function updateCanavs() {
+      //Reset Map
+      ctx.clearRect(ctx.lineWidth / 2, ctx.lineWidth / 2, server._width + gc.BORDER_LINE_WIDTH * 2, server._height + gc.BORDER_LINE_WIDTH * 2); //Redraw Border
+
+      drawBorder(server._width, server._height); //Redraw Pellets
+
+      drawPellets(server); //Redraw Viruses
+
+      drawViruses(server); //Redraw Players
+
+      drawPlayers(server); //Call Request Animation Frame
+
+      if (!gc.RAF_RUNNING) {
+        gc.RAF_RUNNING = true;
+        raf();
+      }
+    };
+
+    var raf = function raf() {
+      /* Ignore */
+      window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+      /* Ignore */
+
+      var start = null;
+      var interval = 0;
+      var frame = 1;
+
+      var step = function step(timestamp) {
+        //If mouse moved, send new data
+        console.log("0");
+        sendMouse();
+
+        if (frame === 59) {
+          frame = 0;
+        }
+
+        frame++;
+        window.requestAnimationFrame(step);
+      };
+
+      window.requestAnimationFrame(step);
+    };
+
+    var sendMouse = function sendMouse() {
+      //Send Mouse Moved
+      message.type = "mousemove";
+      message.content = mouseCoords;
+      ws.send(JSON.stringify(message));
+    };
+  }
 };
 
 /***/ }),
 
-/***/ "./src/index.js":
-/*!**********************!*\
-  !*** ./src/index.js ***!
-  \**********************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var m = __webpack_require__(/*! ./test/main */ "./src/test/main.js");
-
-var b = __webpack_require__(/*! ./test/buttons */ "./src/test/buttons.js");
-
-document.addEventListener("DOMContentLoaded", m.rE);
-window.addEventListener("resize", m.rE);
-document.addEventListener("DOMContentLoaded", b.buttons);
-
-/***/ }),
-
-/***/ "./src/test/botfrenzy.js":
-/*!*******************************!*\
-  !*** ./src/test/botfrenzy.js ***!
-  \*******************************/
+/***/ "./src/js/client/buttons.js":
+/*!**********************************!*\
+  !*** ./src/js/client/buttons.js ***!
+  \**********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 var _this = this;
 
-var m = __webpack_require__(/*! ./main */ "./src/test/main.js");
-
-var gc = __webpack_require__(/*! ../canvas.global */ "./src/canvas.global.js");
-
-var ctx = m.canvas.getContext("2d");
-var currPellets = null;
-var currPlayers = null; //Draw Border
-
-var drawBorder = function drawBorder(width, height) {
-  ctx.lineWidth = gc.BORDER_LINE_WIDTH * gc.CANVAS_ZOOM;
-  ctx.strokeStyle = gc.BORDER_STROKE_COLOR;
-  ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, width, height);
-}; //Draw Pellets
-
-
-exports.drawPellets = function (pel) {
-  if (pel) {
-    for (var i = 0; i < pel.array.length; i++) {
-      ctx.beginPath();
-      ctx.arc(pel.array[i].x, pel.array[i].y, pel.size, 0, 2 * Math.PI);
-      ctx.fillStyle = pel.color;
-      ctx.fill();
-    }
-  }
-}; //Draw Viruses
-
-
-exports.drawViruses = function () {
-  console.log("Viruses Coming Soon!");
-}; //Draw Players
-
-
-exports.drawPlayers = function (p) {
-  if (p) {
-    for (var i = 0; i < p.playerCount; i++) {
-      ctx.beginPath();
-      ctx.arc(p.playerList[i].x, p.playerList[i].y, p.playerList[i].size, 0, 2 * Math.PI);
-      ctx.fillStyle = p.playerList[i].color;
-      ctx.fill();
-    }
-  }
-};
-
-exports.updateCanavs = function (pellets, players) {
-  if (pellets) currPellets = pellets;
-  if (players) currPlayers = players;
-
-  var step = function step(timestamp) {
-    var start = null;
-    if (!start) start = timestamp;
-    var progress = timestamp - start;
-
-    if (progress <= gc.FPS_60) {
-      //Reset Map
-      ctx.clearRect(gc.BORDER_LINE_WIDTH / 2, gc.BORDER_LINE_WIDTH / 2, gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT); //Redraw Border
-
-      drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT); //Redraw Pellets
-
-      pellets ? _this.drawPellets(pellets) : _this.drawPellets(currPellets); //Redraw Viruses
-
-      _this.drawViruses(); //Redraw Players
-
-
-      players ? _this.drawPlayers(players) : _this.drawPlayers(currPlayers); //Reset
-
-      console.log("HI");
-      window.requestAnimationFrame(step);
-    }
-  };
-
-  window.requestAnimationFrame(step);
-};
-
-drawBorder(gc.CANVAS_WIDTH, gc.CANVAS_HEIGHT);
-
-/***/ }),
-
-/***/ "./src/test/buttons.js":
-/*!*****************************!*\
-  !*** ./src/test/buttons.js ***!
-  \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
 //Global Variables
-var mlButtons = document.getElementsByClassName("menu-left-list-buttons");
+var getTopButtons = document.getElementsByClassName("menu-left-list-top-buttons");
+var getBotButtons = document.getElementsByClassName("menu-left-list-bot-buttons");
 
-var web = __webpack_require__(/*! ./websockets */ "./src/test/websockets.js");
+var bf = __webpack_require__(/*! ./botfrenzy */ "./src/js/client/botfrenzy.js");
 
-var botfrenzy = {
+exports.botfrenzy = {
   isActive: false
 };
 
-var buttons = function buttons() {
+exports.buttons = function () {
   var topButtons = [];
-  var botButtons = []; //top button down
+  var botButtons = [];
+  var startFade = null;
 
-  var topDownButton = function topDownButton(e) {
-    var x = e.target;
-    topButtons.forEach(function (y) {
-      y != x ? callOtherButtons(y) : callFadeButton(x);
-    });
-  }; //bot button down
+  var fade = function fade(x) {
+    if (startFade) {
+      clearInterval(startFade);
+    } //Stop the fade on each click
 
 
-  var botDownButton = function botDownButton(e) {
-    var x = e.target;
-    botButtons.forEach(function (y) {
-      y != x ? callOtherButtons(y) : callFadeButton(x);
-    });
-  };
-
-  var callFadeButton = function callFadeButton(x) {
-    //Stop the fade on each click
     if (x) {
       x.style.color = "gray";
       x.style.fontWeight = "bold";
       var time = 0;
-      var sRGB = 0;
-      var eRGB = 765;
-      var getInc = eRGB / 100; //If the button is not already fading, start the fade 
+      var current = 0;
+      var end = 765;
+      var increment = end / 100; //If the button is not already fading, start the fade 
 
       if (!x.selected) {
         x.selected = true;
@@ -970,62 +1019,106 @@ var buttons = function buttons() {
         getWeb();
 
         var buttonFade = function buttonFade() {
-          if (x.selected && time < 100 && !botfrenzy.isActive) {
-            var nRGB = sRGB + getInc;
-            nRGB /= 3;
-            x.style.backgroundColor = "rgb(".concat(nRGB, ", ").concat(nRGB, ", ").concat(nRGB, ")");
-            sRGB = parseFloat((nRGB * 3).toFixed(3));
+          if (time < 100) {
+            var next = (current + increment) / 3;
+            x.style.backgroundColor = "rgb(".concat(next, ", ").concat(next, ", ").concat(next, ")");
+            current = next * 3;
             time++;
-          } else {
-            clearInterval(buttonFade);
           }
         };
 
-        setInterval(buttonFade, 1);
+        if (x.selected && !_this.botfrenzy.isActive) {
+          startFade = setInterval(buttonFade, 1);
+        }
       }
     }
   };
 
-  var callOtherButtons = function callOtherButtons(z) {
+  var reset = function reset(z) {
     //Set other buttons to default
+    z.selected = false;
+    z.disabled = false;
     z.style.color = "white";
     z.style.backgroundColor = "black";
     z.style.fontWeight = "normal";
-    z.selected = false;
-    z.disabled = false;
+  };
+
+  var top = function top(e) {
+    topButtons.forEach(function (y) {
+      y !== e.target ? reset(y) : fade(y);
+    });
+  };
+
+  var bot = function bot(e) {
+    botButtons.forEach(function (y) {
+      y !== e.target ? reset(y) : fade(y);
+    });
   };
 
   var getWeb = function getWeb() {
     //Websocket Code
     if (topButtons[0].selected && botButtons[0].selected) {
-      botfrenzy.isActive = true;
-      web.w();
+      _this.botfrenzy.isActive = true;
+      bf.init();
     }
-  }; //adds event listeners
+  }; //AddEventListeners to buttons
 
 
-  for (var i = 0; i < mlButtons.length; i++) {
-    if (i < 3) {
-      topButtons.push(mlButtons[i]);
-      mlButtons[i].addEventListener("mousedown", topDownButton);
-    } else {
-      botButtons.push(mlButtons[i]);
-      mlButtons[i].addEventListener("mousedown", botDownButton);
-    }
+  for (var i = 0; i < getTopButtons.length; i++) {
+    topButtons.push(getTopButtons[i]);
+    getTopButtons[i].addEventListener("mousedown", top);
   }
-};
 
-module.exports = {
-  buttons: buttons,
-  botfrenzy: botfrenzy
+  for (var _i = 0; _i < getBotButtons.length; _i++) {
+    botButtons.push(getBotButtons[_i]);
+
+    getBotButtons[_i].addEventListener("mousedown", bot);
+  }
 };
 
 /***/ }),
 
-/***/ "./src/test/main.js":
-/*!**************************!*\
-  !*** ./src/test/main.js ***!
-  \**************************/
+/***/ "./src/js/client/canvas.global.js":
+/*!****************************************!*\
+  !*** ./src/js/client/canvas.global.js ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = {
+  BORDER_LINE_WIDTH: 5,
+  BORDER_STROKE_COLOR: "white",
+  RENDER_WIDTH_DISTANCE: 1500,
+  RENDER_HEIGHT_DISTANCE: 800,
+  RAF_RUNNING: false,
+  PELLET_COLOR: "red",
+  VIRUS_COLOR: "gray",
+  VIRUS_STROKE_COLOR: "white"
+};
+
+/***/ }),
+
+/***/ "./src/js/client/index.js":
+/*!********************************!*\
+  !*** ./src/js/client/index.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(/*! ./main */ "./src/js/client/main.js");
+
+var b = __webpack_require__(/*! ./buttons */ "./src/js/client/buttons.js");
+
+document.addEventListener("DOMContentLoaded", m.resize);
+document.addEventListener("DOMContentLoaded", b.buttons);
+window.addEventListener("resize", m.resize);
+
+/***/ }),
+
+/***/ "./src/js/client/main.js":
+/*!*******************************!*\
+  !*** ./src/js/client/main.js ***!
+  \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -1033,7 +1126,7 @@ module.exports = {
 var menu = document.getElementById("menuDiv");
 var canvas = document.getElementById("cvs"); //Resize Event
 
-var resizeEvent = function resizeEvent() {
+var resize = function resize() {
   //Resize Menu
   var wH = window.innerHeight;
   var wW = window.innerWidth;
@@ -1069,90 +1162,19 @@ var resizeEvent = function resizeEvent() {
 module.exports = {
   menu: menu,
   canvas: canvas,
-  rE: resizeEvent
-};
-
-/***/ }),
-
-/***/ "./src/test/websockets.js":
-/*!********************************!*\
-  !*** ./src/test/websockets.js ***!
-  \********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var websockets = function websockets() {
-  var m = __webpack_require__(/*! ./main */ "./src/test/main.js");
-
-  var b = __webpack_require__(/*! ./buttons */ "./src/test/buttons.js");
-
-  var bf = __webpack_require__(/*! ./botfrenzy */ "./src/test/botfrenzy.js");
-
-  var playerId = "";
-
-  if (b.botfrenzy.isActive) {
-    var ws = new WebSocket("ws://localhost:8080");
-
-    window.onbeforeunload = function () {
-      ws.onclose();
-    }; //console.log(ws);
-
-
-    ws.onopen = function () {
-      ws.send("CLIENT-SIDE: OPENED");
-      m.menu.style.display = "none";
-    };
-
-    ws.onmessage = function (msg) {
-      var data = JSON.parse(msg.data);
-      var pellets = null;
-      var players = null;
-
-      if (data.id === "pellets") {
-        //Draw Canvas
-        pellets = data;
-        bf.drawPellets(pellets);
-        bf.updateCanavs(pellets, null);
-      } else if (data.playerList[0].id === "player") {
-        players = data;
-
-        var assignPlayerId = function assignPlayerId() {
-          playerId = players.playerList[players.playerList.length - 1].clientId;
-        };
-
-        if (!playerId) {
-          assignPlayerId();
-        } //Spawn Player
-
-
-        bf.drawPlayers(players);
-        bf.updateCanavs(null, players);
-      } else {
-        //Log the message
-        console.log("SERVER MESSAGE: ".concat(data));
-      }
-    };
-
-    ws.onclose = function () {
-      ws.send(playerId);
-    };
-  }
-};
-
-module.exports = {
-  w: websockets
+  resize: resize
 };
 
 /***/ }),
 
 /***/ 0:
-/*!****************************!*\
-  !*** multi ./src/index.js ***!
-  \****************************/
+/*!**************************************!*\
+  !*** multi ./src/js/client/index.js ***!
+  \**************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/index.js */"./src/index.js");
+module.exports = __webpack_require__(/*! ./src/js/client/index.js */"./src/js/client/index.js");
 
 
 /***/ })
