@@ -1,10 +1,13 @@
-const string = "{}";
-let stringHolder = [];
+const bf = require("./server.bf");
+const string = JSON.stringify(bf.server);
+console.log(string);
 const getStringCode = (s) =>{
+  let stringHolder = [];
   for(let i = 0; i <  s.length; i++){
     let code = string.charCodeAt(i);
     stringHolder.push(code);
   }
+  return stringHolder;
 };
 const convertToBinary = (array) =>{
   let binaryArray = []
@@ -34,6 +37,6 @@ const convertToBinary = (array) =>{
   }
   return binaryArray;
 };
-let stringCode = getStringCode(string);
+let stringHolder = getStringCode(string);
 let stringBinary = convertToBinary(stringHolder);
 console.log(stringBinary);

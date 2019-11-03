@@ -42,53 +42,50 @@ server.on("upgrade", (req, socket, head)=>{
 });
 //Websocket Connection
 wss.on("connection", ws => {
-  ws.binaryType = "blob";
   //When the connection is established...
   if(bf.server.count < bf.server._limit){
     //Send Client server confirmation message
     ws.send("SERVER MESSAGE: OPENED");
-    //Create new player
-    bf.newPlayer();
+    //Send necessary information
+    ws.send(JSON.stringify(bf.sendInfo()), {binary:true});
+    //Spawns the player
+    ws.send(JSON.stringify(bf.playerSpawn()), {binary:true});
+    //Error 
+    ws.on("error", err =>{
+      console.log(`ERROR: ${err}`);
+    });
+    //Message
+    ws.on("message", msg =>{
+      try{
+        let convertMSG = msg.toString("utf-8");
+        let message = JSON.parse(convertMSG);
+        if(message.id === "move"){
+          //Update player coords
+          ws.send(JSON.stringify(bf.playerMovement(message)), {binary:true});
+        }else if(message.id === "search"){
+          //Update render search list.
+          bf.staticSearchList(message);
+        }else if(message.id === "open"){
+          console.log(message.content);
+        }else if(message.id === "close"){
+          console.log(message.content);
+          bf.playerLeft(message);
+        }
+      }
+      catch(e){
+        console.log(`Error: ${e} / Message: ${msg}`);
+      }
+    });
+    //Close
+    ws.on("close", () =>{
+      ws.close();
+    });
   }else{
     //Send Client server confirmation message
     ws.send("SERVER MESSAGE: SERVER IS FULL!");
     //Close the socekt
     ws.close();
   }
-  //Send Server to every client
-  wss.clients.forEach(client=>{
-    client.send(JSON.stringify(bf.server));
-  });
-  ws.on("error", err =>{
-    console.log(`ERROR: ${err}`);
-  });
-  ws.on("message", msg =>{
-    try{
-      let message = JSON.parse(msg);
-      if(message.type === "open"){
-        console.log(`CLIENT MESSAGE: ${message.content}`);
-      }else if(message.type === "mousemove"){
-        bf.playerMovement(message);
-        wss.clients.forEach(client=>{
-          client.send(JSON.stringify(bf.server));
-        });
-      }else if(message.type === "close"){
-        bf.playerLeft(message);
-        wss.clients.forEach(client=>{
-          if(client !== ws){
-            client.send(JSON.stringify(bf.server));
-          }
-        });
-      }
-    }
-    catch(e){
-      //console.log(e);
-    }
-  });
-  ws.on("close", close =>{
-    console.log(`CLOSED: ${close}`);
-    ws.close();
-  });
 });
 console.log(`Listening to port 8080`);
 server.listen(8080);

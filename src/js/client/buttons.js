@@ -1,7 +1,7 @@
 //Global Variables
 const getTopButtons = document.getElementsByClassName("menu-left-list-top-buttons");
 const getBotButtons = document.getElementsByClassName("menu-left-list-bot-buttons");
-const bf = require("./botfrenzy");
+const canvas = require("./canvas");
 exports.botfrenzy = {
   isActive: false
 };
@@ -62,7 +62,7 @@ exports.buttons = () => {
     //Websocket Code
     if(topButtons[0].selected && botButtons[0].selected){
       this.botfrenzy.isActive = true;
-      bf.init();
+      canvas.init();
     }
   };
   //AddEventListeners to buttons

@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "buildweb": "webpack",
     "start": "webpack-dev-server",
-    "testweb": "nodemon ./src/js/server/server.js"
+    "oldtestweb": "nodemon ./src/js/server/server.js",
+    "testweb": "nodemon ./src/js/server/httpserver.js"
   },
   "repository": {
     "type": "git",
